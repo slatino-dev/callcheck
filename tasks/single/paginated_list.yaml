@@ -1,0 +1,42 @@
+# Paginated list query — page + page_size with defaults.
+id: single_paginated_list
+description: Model calls list_orders with page and page_size args.
+tags: [single_tool, numeric_arg, pagination]
+
+messages:
+  - role: user
+    content: "Show me the second page of orders with 25 per page."
+
+tools:
+  - type: function
+    function:
+      name: list_orders
+      description: List orders with pagination.
+      parameters:
+        type: object
+        properties:
+          page:
+            type: integer
+            minimum: 1
+          page_size:
+            type: integer
+            minimum: 1
+            maximum: 100
+          status_filter:
+            type: string
+            enum: [all, pending, completed, cancelled]
+        required: [page, page_size]
+
+expect:
+  tool_calls:
+    count: 1
+    name: list_orders
+    required_args: [page, page_size]
+    arg_predicates:
+      page:
+        type: integer
+        min: 1
+      page_size:
+        type: integer
+        min: 1
+        max: 100

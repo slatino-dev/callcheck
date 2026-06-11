@@ -1,0 +1,33 @@
+# Float precision — model must pass a precise decimal price.
+id: edge_float_precision
+description: Model passes a precise float (unit price) without rounding errors.
+tags: [edge_case, numeric_arg, float_precision]
+
+messages:
+  - role: user
+    content: "Set the price of product SKU-007 to $1234.56."
+
+tools:
+  - type: function
+    function:
+      name: set_price
+      description: Set product price.
+      parameters:
+        type: object
+        properties:
+          sku:
+            type: string
+          price_usd:
+            type: number
+            minimum: 0
+        required: [sku, price_usd]
+
+expect:
+  tool_calls:
+    count: 1
+    name: set_price
+    required_args: [sku, price_usd]
+    arg_predicates:
+      price_usd:
+        type: number
+        min: 0

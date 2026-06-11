@@ -1,0 +1,35 @@
+# Array argument — list of tag strings.
+id: single_array_arg
+description: Model passes a list of tags as an array argument.
+tags: [single_tool, array_arg]
+
+messages:
+  - role: user
+    content: "Label the support ticket as 'urgent', 'billing', and 'refund'."
+
+tools:
+  - type: function
+    function:
+      name: label_ticket
+      description: Apply labels to a support ticket.
+      parameters:
+        type: object
+        properties:
+          ticket_id:
+            type: string
+            description: The ticket identifier.
+          labels:
+            type: array
+            items:
+              type: string
+            description: Labels to apply.
+        required: [ticket_id, labels]
+
+expect:
+  tool_calls:
+    count: 1
+    name: label_ticket
+    required_args: [ticket_id, labels]
+    arg_predicates:
+      labels:
+        type: array

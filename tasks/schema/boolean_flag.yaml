@@ -1,0 +1,34 @@
+# Boolean arg — model must use true/false, not 1/0 or "true"/"false".
+id: schema_boolean_flag
+description: Model must emit a JSON boolean (not a string) for an enabled flag.
+tags: [schema_complex, boolean_arg, type_discipline]
+
+messages:
+  - role: user
+    content: "Enable notifications for user U-9876."
+
+tools:
+  - type: function
+    function:
+      name: update_user_settings
+      description: Update settings for a user.
+      parameters:
+        type: object
+        properties:
+          user_id:
+            type: string
+          notifications_enabled:
+            type: boolean
+          theme:
+            type: string
+            enum: [light, dark, system]
+        required: [user_id, notifications_enabled]
+
+expect:
+  tool_calls:
+    count: 1
+    name: update_user_settings
+    required_args: [user_id, notifications_enabled]
+    arg_predicates:
+      notifications_enabled:
+        type: boolean

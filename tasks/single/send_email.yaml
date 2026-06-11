@@ -1,0 +1,40 @@
+# Multiple required string args (to, subject, body).
+id: single_send_email
+description: Model calls send_email with to/subject/body — all required.
+tags: [single_tool, required_arg, multi_required]
+
+messages:
+  - role: user
+    content: "Send an email to alice@example.com with subject 'Hello' and body 'How are you?'"
+
+tools:
+  - type: function
+    function:
+      name: send_email
+      description: Send an email message.
+      parameters:
+        type: object
+        properties:
+          to:
+            type: string
+            description: Recipient email address.
+          subject:
+            type: string
+            description: Email subject line.
+          body:
+            type: string
+            description: Email body text.
+          cc:
+            type: string
+            description: Optional CC address.
+        required: [to, subject, body]
+
+expect:
+  tool_calls:
+    count: 1
+    name: send_email
+    required_args: [to, subject, body]
+    arg_predicates:
+      to:
+        type: string
+        pattern: "^[^@]+@[^@]+$"

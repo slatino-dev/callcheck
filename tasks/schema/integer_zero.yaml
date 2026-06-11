@@ -1,0 +1,39 @@
+# Zero as integer — model must emit 0, not "0" or null.
+id: schema_integer_zero
+description: Offset of zero is a valid integer; model must not omit it or stringify it.
+tags: [schema_complex, numeric_arg, zero_value]
+
+messages:
+  - role: user
+    content: "Fetch all products starting from the very beginning (offset 0)."
+
+tools:
+  - type: function
+    function:
+      name: list_products
+      description: List products with cursor-based pagination.
+      parameters:
+        type: object
+        properties:
+          offset:
+            type: integer
+            minimum: 0
+          limit:
+            type: integer
+            minimum: 1
+            maximum: 500
+        required: [offset, limit]
+
+expect:
+  tool_calls:
+    count: 1
+    name: list_products
+    required_args: [offset, limit]
+    arg_predicates:
+      offset:
+        type: integer
+        min: 0
+      limit:
+        type: integer
+        min: 1
+        max: 500

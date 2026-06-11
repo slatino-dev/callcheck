@@ -1,0 +1,46 @@
+# Deeply nested schema — order with line_items array of objects.
+id: schema_deeply_nested
+description: Model must populate a nested order with line items array.
+tags: [schema_complex, nested_object, array_arg]
+
+messages:
+  - role: user
+    content: >
+      Place an order for customer C-001: two units of SKU-A at $9.99 each
+      and one unit of SKU-B at $24.50.
+
+tools:
+  - type: function
+    function:
+      name: place_order
+      description: Place a product order.
+      parameters:
+        type: object
+        properties:
+          customer_id:
+            type: string
+          line_items:
+            type: array
+            items:
+              type: object
+              properties:
+                sku:
+                  type: string
+                quantity:
+                  type: integer
+                  minimum: 1
+                unit_price:
+                  type: number
+              required: [sku, quantity, unit_price]
+        required: [customer_id, line_items]
+
+expect:
+  tool_calls:
+    count: 1
+    name: place_order
+    required_args: [customer_id, line_items]
+    arg_predicates:
+      customer_id:
+        type: string
+      line_items:
+        type: array

@@ -1,0 +1,31 @@
+# Emoji in string arg — must survive JSON round-trip without double-escaping.
+id: edge_emoji_in_string
+description: Model passes emoji in a text field; must not double-escape.
+tags: [edge_case, emoji, escaping, string_discipline]
+
+messages:
+  - role: user
+    content: "Create a note titled '🎉 Launch Day! 🚀' with body 'We did it! 🥳'"
+
+tools:
+  - type: function
+    function:
+      name: create_note
+      description: Create a note.
+      parameters:
+        type: object
+        properties:
+          title:
+            type: string
+          body:
+            type: string
+        required: [title, body]
+
+expect:
+  tool_calls:
+    count: 1
+    name: create_note
+    required_args: [title, body]
+    arg_predicates:
+      title:
+        type: string

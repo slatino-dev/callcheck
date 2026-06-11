@@ -1,0 +1,35 @@
+# Reminder with ISO datetime string.
+id: single_set_reminder
+description: Model calls set_reminder with message and datetime string.
+tags: [single_tool, required_arg, datetime_string]
+
+messages:
+  - role: user
+    content: "Set a reminder for tomorrow at 9am to call the accountant."
+
+tools:
+  - type: function
+    function:
+      name: set_reminder
+      description: Create a time-based reminder.
+      parameters:
+        type: object
+        properties:
+          message:
+            type: string
+            description: Reminder text.
+          remind_at:
+            type: string
+            description: ISO-8601 datetime when to fire the reminder.
+        required: [message, remind_at]
+
+expect:
+  tool_calls:
+    count: 1
+    name: set_reminder
+    required_args: [message, remind_at]
+    arg_predicates:
+      message:
+        type: string
+      remind_at:
+        type: string

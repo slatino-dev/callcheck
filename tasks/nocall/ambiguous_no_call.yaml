@@ -1,0 +1,26 @@
+# Ambiguous prompt where a capable model should resist calling a tool.
+id: nocall_ambiguous_prompt
+description: >
+  Prompt is conversational small-talk; a well-calibrated model should reply
+  in plain text rather than calling tools.
+tags: [no_call_needed, conversational]
+
+messages:
+  - role: user
+    content: "Thanks, that was really helpful!"
+
+tools:
+  - type: function
+    function:
+      name: get_weather
+      description: Get current weather for a city.
+      parameters:
+        type: object
+        properties:
+          location:
+            type: string
+        required: [location]
+
+expect:
+  tool_calls:
+    count: 0

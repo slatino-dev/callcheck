@@ -1,0 +1,35 @@
+# Single call with required string and optional integer.
+id: single_search_query
+description: Model calls search with a query string and optional limit.
+tags: [single_tool, required_arg, optional_arg]
+
+messages:
+  - role: user
+    content: "Search the web for recent news about open-source LLMs."
+
+tools:
+  - type: function
+    function:
+      name: web_search
+      description: Search the web and return results.
+      parameters:
+        type: object
+        properties:
+          query:
+            type: string
+            description: The search query.
+          limit:
+            type: integer
+            description: Max results to return.
+            minimum: 1
+            maximum: 50
+        required: [query]
+
+expect:
+  tool_calls:
+    count: 1
+    name: web_search
+    required_args: [query]
+    arg_predicates:
+      query:
+        type: string

@@ -1,0 +1,25 @@
+# Parallel tool calls — model must emit exactly 2 calls.
+id: parallel_two_calls_must_emit
+description: Model must emit two tool calls in one turn (parallel).
+tags: [parallel, must_emit_n, multi_call]
+
+messages:
+  - role: user
+    content: "Get the weather in both Dublin and Tokyo."
+
+tools:
+  - type: function
+    function:
+      name: get_weather
+      description: Get current weather for a city.
+      parameters:
+        type: object
+        properties:
+          location:
+            type: string
+        required: [location]
+
+expect:
+  tool_calls:
+    count: 2
+    name: get_weather

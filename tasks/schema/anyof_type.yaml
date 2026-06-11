@@ -1,0 +1,34 @@
+# anyOf schema — value can be string or null.
+id: schema_anyof_nullable
+description: Parameter accepts string or null (anyOf); model must use one of them.
+tags: [schema_complex, anyof, nullable]
+
+messages:
+  - role: user
+    content: "Look up the user with ID 42. The region field is unknown."
+
+tools:
+  - type: function
+    function:
+      name: lookup_user
+      description: Look up a user by ID.
+      parameters:
+        type: object
+        properties:
+          user_id:
+            type: integer
+          region:
+            anyOf:
+              - type: string
+              - type: "null"
+            description: Optional region code; null if unknown.
+        required: [user_id]
+
+expect:
+  tool_calls:
+    count: 1
+    name: lookup_user
+    required_args: [user_id]
+    arg_predicates:
+      user_id:
+        type: integer

@@ -1,0 +1,27 @@
+# Model should NOT call any tool (pure conversation question).
+# A model that over-triggers tools will fail this case.
+id: nocall_no_tool_needed
+description: >
+  The user asks a factual question that needs no tool. The correct response
+  is plain text — no tool call. count=0 signals the checker to expect zero calls.
+tags: [no_call_needed, conversational]
+
+messages:
+  - role: user
+    content: "What does the term 'latency' mean in networking?"
+
+tools:
+  - type: function
+    function:
+      name: web_search
+      description: Search the web.
+      parameters:
+        type: object
+        properties:
+          query:
+            type: string
+        required: [query]
+
+expect:
+  tool_calls:
+    count: 0

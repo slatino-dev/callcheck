@@ -1,0 +1,50 @@
+# Schema with mixed types — string, int, float, bool, array in one call.
+id: schema_mixed_types_all_required
+description: Model populates all five JSON types in one call correctly.
+tags: [schema_complex, mixed_types, required_arg]
+
+messages:
+  - role: user
+    content: >
+      Create an experiment: name='trial-7', iterations=50, learning_rate=0.001,
+      shuffle=true, tags=['cv', 'baseline'].
+
+tools:
+  - type: function
+    function:
+      name: create_experiment
+      description: Create an ML experiment run.
+      parameters:
+        type: object
+        properties:
+          name:
+            type: string
+          iterations:
+            type: integer
+            minimum: 1
+          learning_rate:
+            type: number
+            exclusiveMinimum: 0
+          shuffle:
+            type: boolean
+          tags:
+            type: array
+            items:
+              type: string
+        required: [name, iterations, learning_rate, shuffle, tags]
+
+expect:
+  tool_calls:
+    count: 1
+    name: create_experiment
+    required_args: [name, iterations, learning_rate, shuffle, tags]
+    arg_predicates:
+      name:
+        type: string
+      iterations:
+        type: integer
+        min: 1
+      shuffle:
+        type: boolean
+      tags:
+        type: array

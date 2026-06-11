@@ -1,0 +1,40 @@
+# Long string arg — body is a multi-sentence paragraph.
+id: edge_long_string_arg
+description: Model must pass a long string argument without truncating it.
+tags: [edge_case, long_string, string_discipline]
+
+messages:
+  - role: user
+    content: >
+      File a bug report with the following description:
+      "The application crashes on startup when the user's home directory path
+      contains spaces. Steps to reproduce: 1) Create a user account with a
+      space in the username, 2) Launch the app, 3) Observe crash immediately.
+      Expected: App launches normally. Actual: Fatal exception in path parser.
+      Seen on Windows 11 and Ubuntu 22.04. Priority: High."
+
+tools:
+  - type: function
+    function:
+      name: file_bug_report
+      description: File a bug report in the tracker.
+      parameters:
+        type: object
+        properties:
+          title:
+            type: string
+          description:
+            type: string
+          severity:
+            type: string
+            enum: [low, medium, high, critical]
+        required: [title, description]
+
+expect:
+  tool_calls:
+    count: 1
+    name: file_bug_report
+    required_args: [title, description]
+    arg_predicates:
+      title:
+        type: string

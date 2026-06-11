@@ -1,0 +1,39 @@
+# Tool is explicitly forced — model must call it even with a broad prompt.
+id: single_forced_tool_choice
+description: Tool choice is forced; model must emit the call.
+tags: [single_tool, forced_tool_choice, smoke]
+
+messages:
+  - role: system
+    content: >
+      You are a scheduling assistant.
+      You MUST call book_meeting to record every meeting request.
+  - role: user
+    content: "Book a meeting with the design team at 2pm on Friday."
+
+tools:
+  - type: function
+    function:
+      name: book_meeting
+      description: Book a calendar meeting.
+      parameters:
+        type: object
+        properties:
+          title:
+            type: string
+            description: Meeting title.
+          time:
+            type: string
+            description: ISO-8601 datetime or natural description.
+          attendees:
+            type: array
+            items:
+              type: string
+            description: List of attendee names or emails.
+        required: [title, time]
+
+expect:
+  tool_calls:
+    count: 1
+    name: book_meeting
+    required_args: [title, time]

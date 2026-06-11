@@ -1,0 +1,37 @@
+# Parallel calls to two DIFFERENT tools.
+id: parallel_two_different_tools
+description: Model must call both get_weather and web_search in the same turn.
+tags: [parallel, multi_call, different_tools]
+
+messages:
+  - role: user
+    content: >
+      I need two things at once: the current weather in Berlin,
+      and search results for 'Berlin tech scene 2025'.
+
+tools:
+  - type: function
+    function:
+      name: get_weather
+      description: Get current weather for a city.
+      parameters:
+        type: object
+        properties:
+          location:
+            type: string
+        required: [location]
+
+  - type: function
+    function:
+      name: web_search
+      description: Search the web.
+      parameters:
+        type: object
+        properties:
+          query:
+            type: string
+        required: [query]
+
+expect:
+  tool_calls:
+    count: 2

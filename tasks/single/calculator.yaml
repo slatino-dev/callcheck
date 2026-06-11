@@ -1,0 +1,37 @@
+# Numeric args with enum operator — tests int/enum discipline.
+id: single_calculator
+description: Model calls calculate with two numbers and an operator enum.
+tags: [single_tool, enum_arg, numeric_arg]
+
+messages:
+  - role: user
+    content: "What is 42 divided by 7?"
+
+tools:
+  - type: function
+    function:
+      name: calculate
+      description: Perform a basic arithmetic operation.
+      parameters:
+        type: object
+        properties:
+          a:
+            type: number
+            description: Left operand.
+          b:
+            type: number
+            description: Right operand.
+          operator:
+            type: string
+            enum: [add, subtract, multiply, divide]
+            description: The operation to apply.
+        required: [a, b, operator]
+
+expect:
+  tool_calls:
+    count: 1
+    name: calculate
+    required_args: [a, b, operator]
+    arg_predicates:
+      operator:
+        enum: [add, subtract, multiply, divide]

@@ -1,0 +1,36 @@
+# Null value for nullable optional field — model may pass null explicitly.
+id: edge_null_optional_field
+description: >
+  The 'parent_id' is explicitly said to be absent. Model may either
+  omit the field or set it to null (both valid for nullable optional).
+tags: [edge_case, nullable, optional_arg]
+
+messages:
+  - role: user
+    content: "Create a top-level category called 'Electronics' with no parent."
+
+tools:
+  - type: function
+    function:
+      name: create_category
+      description: Create a product category.
+      parameters:
+        type: object
+        properties:
+          name:
+            type: string
+          parent_id:
+            anyOf:
+              - type: string
+              - type: "null"
+            description: Parent category ID, or null for top-level.
+        required: [name]
+
+expect:
+  tool_calls:
+    count: 1
+    name: create_category
+    required_args: [name]
+    arg_predicates:
+      name:
+        type: string

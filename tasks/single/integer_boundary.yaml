@@ -1,0 +1,37 @@
+# int64 boundary — paginate with large offset value.
+id: single_integer_boundary
+description: Model passes a large integer (int64 range) as a pagination offset.
+tags: [single_tool, int64, numeric_arg]
+
+messages:
+  - role: user
+    content: "Fetch log entries starting at offset 9223372036854775807 with page size 100."
+
+tools:
+  - type: function
+    function:
+      name: fetch_logs
+      description: Fetch paginated log entries.
+      parameters:
+        type: object
+        properties:
+          offset:
+            type: integer
+            description: Starting offset (supports int64).
+          page_size:
+            type: integer
+            description: Number of entries to return.
+            minimum: 1
+            maximum: 10000
+        required: [offset, page_size]
+
+expect:
+  tool_calls:
+    count: 1
+    name: fetch_logs
+    required_args: [offset, page_size]
+    arg_predicates:
+      page_size:
+        type: integer
+        min: 1
+        max: 10000

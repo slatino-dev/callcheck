@@ -1,0 +1,39 @@
+# Nested object schema — address with street/city/country sub-keys.
+id: single_nested_object
+description: Model must populate a nested address object correctly.
+tags: [single_tool, nested_object, schema_complex]
+
+messages:
+  - role: user
+    content: "Create a new customer record: Jane Doe, lives at 10 Downing St, London, UK."
+
+tools:
+  - type: function
+    function:
+      name: create_customer
+      description: Create a customer in the CRM.
+      parameters:
+        type: object
+        properties:
+          name:
+            type: string
+          address:
+            type: object
+            properties:
+              street:
+                type: string
+              city:
+                type: string
+              country:
+                type: string
+            required: [street, city]
+        required: [name, address]
+
+expect:
+  tool_calls:
+    count: 1
+    name: create_customer
+    required_args: [name, address]
+    arg_predicates:
+      name:
+        type: string

@@ -1,0 +1,37 @@
+# Newline character in string value — legal JSON, escaping checker should pass.
+id: edge_newline_in_string
+description: Model includes a newline in a long body; must be properly escaped in JSON.
+tags: [edge_case, escaping, string_discipline]
+
+messages:
+  - role: user
+    content: >
+      Post the following multi-line message:
+      "Dear Team,
+
+      Please review the attached report.
+
+      Thanks"
+
+tools:
+  - type: function
+    function:
+      name: post_message
+      description: Post a message to a channel.
+      parameters:
+        type: object
+        properties:
+          channel:
+            type: string
+          text:
+            type: string
+        required: [channel, text]
+
+expect:
+  tool_calls:
+    count: 1
+    name: post_message
+    required_args: [channel, text]
+    arg_predicates:
+      text:
+        type: string

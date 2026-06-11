@@ -1,0 +1,26 @@
+# Parallel tool calls — model must emit exactly 3 calls.
+id: parallel_three_calls_search
+description: Model must search for three topics simultaneously.
+tags: [parallel, must_emit_n, multi_call]
+
+messages:
+  - role: user
+    content: "Search simultaneously for: 'Python async IO', 'Rust tokio tutorial', 'Go concurrency patterns'."
+
+tools:
+  - type: function
+    function:
+      name: web_search
+      description: Search the web and return results.
+      parameters:
+        type: object
+        properties:
+          query:
+            type: string
+            description: The search query.
+        required: [query]
+
+expect:
+  tool_calls:
+    count: 3
+    name: web_search

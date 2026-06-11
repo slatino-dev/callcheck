@@ -1,0 +1,35 @@
+# Numeric range — temperature set-point with tight bounds.
+id: edge_numeric_range_setpoint
+description: Model must set temperature within [18.0, 30.0] degrees Celsius.
+tags: [edge_case, numeric_arg, range_check]
+
+messages:
+  - role: user
+    content: "Set the thermostat to 22 degrees Celsius in room 7."
+
+tools:
+  - type: function
+    function:
+      name: set_thermostat
+      description: Set a room thermostat temperature.
+      parameters:
+        type: object
+        properties:
+          room_id:
+            type: integer
+          temperature_celsius:
+            type: number
+            minimum: 18.0
+            maximum: 30.0
+        required: [room_id, temperature_celsius]
+
+expect:
+  tool_calls:
+    count: 1
+    name: set_thermostat
+    required_args: [room_id, temperature_celsius]
+    arg_predicates:
+      temperature_celsius:
+        type: number
+        min: 18.0
+        max: 30.0

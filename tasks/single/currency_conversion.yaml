@@ -1,0 +1,41 @@
+# Currency conversion with enum currency codes.
+id: single_currency_conversion
+description: Model calls convert_currency with amount and source/target currency codes.
+tags: [single_tool, enum_arg, numeric_arg]
+
+messages:
+  - role: user
+    content: "Convert 250 US dollars to euros."
+
+tools:
+  - type: function
+    function:
+      name: convert_currency
+      description: Convert an amount between two currencies.
+      parameters:
+        type: object
+        properties:
+          amount:
+            type: number
+            minimum: 0
+          from_currency:
+            type: string
+            enum: [USD, EUR, GBP, JPY, CAD, AUD, CHF]
+          to_currency:
+            type: string
+            enum: [USD, EUR, GBP, JPY, CAD, AUD, CHF]
+        required: [amount, from_currency, to_currency]
+
+expect:
+  tool_calls:
+    count: 1
+    name: convert_currency
+    required_args: [amount, from_currency, to_currency]
+    arg_predicates:
+      from_currency:
+        enum: [USD, EUR, GBP, JPY, CAD, AUD, CHF]
+      to_currency:
+        enum: [USD, EUR, GBP, JPY, CAD, AUD, CHF]
+      amount:
+        type: number
+        min: 0

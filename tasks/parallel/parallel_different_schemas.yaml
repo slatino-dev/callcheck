@@ -1,0 +1,39 @@
+# Two parallel calls with meaningfully different schemas.
+id: parallel_different_schemas
+description: Model must call lookup_stock and send_alert in the same turn.
+tags: [parallel, multi_call, different_tools]
+
+messages:
+  - role: user
+    content: >
+      Simultaneously: check stock for SKU-9001, and send an SMS alert to
+      +1-555-0100 saying 'Low stock warning'.
+
+tools:
+  - type: function
+    function:
+      name: lookup_stock
+      description: Look up current stock for a SKU.
+      parameters:
+        type: object
+        properties:
+          sku:
+            type: string
+        required: [sku]
+
+  - type: function
+    function:
+      name: send_sms
+      description: Send an SMS message to a phone number.
+      parameters:
+        type: object
+        properties:
+          phone_number:
+            type: string
+          message:
+            type: string
+        required: [phone_number, message]
+
+expect:
+  tool_calls:
+    count: 2

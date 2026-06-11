@@ -1,0 +1,33 @@
+# Single required string arg — baseline smoke test.
+id: single_weather_basic
+description: Model calls get_weather with a location string.
+tags: [single_tool, required_arg, smoke]
+
+messages:
+  - role: user
+    content: "What's the current weather in Dublin?"
+
+tools:
+  - type: function
+    function:
+      name: get_weather
+      description: Get current weather for a city.
+      parameters:
+        type: object
+        properties:
+          location:
+            type: string
+            description: City name.
+          units:
+            type: string
+            enum: [celsius, fahrenheit]
+        required: [location]
+
+expect:
+  tool_calls:
+    count: 1
+    name: get_weather
+    required_args: [location]
+    arg_predicates:
+      location:
+        type: string

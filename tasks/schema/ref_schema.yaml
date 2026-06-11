@@ -1,0 +1,38 @@
+# $ref-style inline schema — coordinates with lat/lon.
+id: schema_coordinates
+description: Model passes geographic coordinates as structured object.
+tags: [schema_complex, nested_object, coordinates]
+
+messages:
+  - role: user
+    content: "Pin a location at latitude 53.3498 longitude -6.2603 with label 'Dublin HQ'."
+
+tools:
+  - type: function
+    function:
+      name: pin_location
+      description: Drop a pin at given coordinates.
+      parameters:
+        type: object
+        properties:
+          coordinates:
+            type: object
+            properties:
+              lat:
+                type: number
+                minimum: -90
+                maximum: 90
+              lon:
+                type: number
+                minimum: -180
+                maximum: 180
+            required: [lat, lon]
+          label:
+            type: string
+        required: [coordinates, label]
+
+expect:
+  tool_calls:
+    count: 1
+    name: pin_location
+    required_args: [coordinates, label]

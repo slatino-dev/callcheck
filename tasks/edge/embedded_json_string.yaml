@@ -1,0 +1,36 @@
+# Embedded JSON in string arg — the value itself looks like JSON.
+id: edge_embedded_json_string
+description: >
+  A string argument whose value happens to look like JSON.
+  The model must keep it as a plain string, not un-nest it.
+tags: [edge_case, escaping, string_discipline]
+
+messages:
+  - role: user
+    content: >
+      Execute the command with payload: {"action": "reboot", "target": "node-01"}
+
+tools:
+  - type: function
+    function:
+      name: run_command
+      description: Execute a command with a payload string.
+      parameters:
+        type: object
+        properties:
+          command:
+            type: string
+            description: The command to run.
+          payload:
+            type: string
+            description: A JSON string passed as the command payload.
+        required: [command, payload]
+
+expect:
+  tool_calls:
+    count: 1
+    name: run_command
+    required_args: [command, payload]
+    arg_predicates:
+      payload:
+        type: string

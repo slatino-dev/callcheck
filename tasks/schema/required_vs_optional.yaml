@@ -1,0 +1,38 @@
+# Required vs optional discipline — optional fields should be omitted when not provided.
+id: schema_required_optional_discipline
+description: >
+  Model is given info only for required fields. Optional fields (cc, bcc)
+  should be absent rather than null-padded.
+tags: [schema_complex, optional_arg, discipline]
+
+messages:
+  - role: user
+    content: "Send an email to bob@example.com with subject 'Update' and body 'Done'."
+
+tools:
+  - type: function
+    function:
+      name: send_email
+      description: Send an email.
+      parameters:
+        type: object
+        properties:
+          to:
+            type: string
+          subject:
+            type: string
+          body:
+            type: string
+          cc:
+            type: string
+            description: Optional CC recipient.
+          bcc:
+            type: string
+            description: Optional BCC recipient.
+        required: [to, subject, body]
+
+expect:
+  tool_calls:
+    count: 1
+    name: send_email
+    required_args: [to, subject, body]

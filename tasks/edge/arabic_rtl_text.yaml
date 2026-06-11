@@ -1,0 +1,29 @@
+# Right-to-left text in string arg — Arabic city name.
+id: edge_arabic_rtl_text
+description: Model handles Arabic RTL text in a string argument correctly.
+tags: [edge_case, unicode, rtl, string_discipline]
+
+messages:
+  - role: user
+    content: "ما هو الطقس في الرياض الآن؟"
+
+tools:
+  - type: function
+    function:
+      name: get_weather
+      description: Get current weather for a city.
+      parameters:
+        type: object
+        properties:
+          location:
+            type: string
+        required: [location]
+
+expect:
+  tool_calls:
+    count: 1
+    name: get_weather
+    required_args: [location]
+    arg_predicates:
+      location:
+        type: string

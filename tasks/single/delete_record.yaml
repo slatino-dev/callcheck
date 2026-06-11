@@ -1,0 +1,32 @@
+# Delete operation with id arg.
+id: single_delete_record
+description: Model calls delete_record with a required record_id string.
+tags: [single_tool, required_arg, delete_op]
+
+messages:
+  - role: user
+    content: "Delete the customer record with ID CUST-1234."
+
+tools:
+  - type: function
+    function:
+      name: delete_record
+      description: Delete a record by ID.
+      parameters:
+        type: object
+        properties:
+          record_id:
+            type: string
+          confirm:
+            type: boolean
+            description: Must be true to confirm deletion.
+        required: [record_id, confirm]
+
+expect:
+  tool_calls:
+    count: 1
+    name: delete_record
+    required_args: [record_id, confirm]
+    arg_predicates:
+      confirm:
+        type: boolean

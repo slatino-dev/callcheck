@@ -1,0 +1,40 @@
+# Translation tool — source and target language enums.
+id: single_translate_text
+description: Model calls translate with text and target language enum.
+tags: [single_tool, enum_arg, required_arg]
+
+messages:
+  - role: user
+    content: "Translate 'Good morning, how are you?' into Spanish."
+
+tools:
+  - type: function
+    function:
+      name: translate
+      description: Translate text to a target language.
+      parameters:
+        type: object
+        properties:
+          text:
+            type: string
+            description: The text to translate.
+          target_language:
+            type: string
+            enum: [es, fr, de, it, pt, ja, zh, ar, ru, ko]
+            description: ISO 639-1 language code.
+          source_language:
+            type: string
+            enum: [en, es, fr, de, it, pt, ja, zh, ar, ru, ko]
+            description: Source language; omit for auto-detect.
+        required: [text, target_language]
+
+expect:
+  tool_calls:
+    count: 1
+    name: translate
+    required_args: [text, target_language]
+    arg_predicates:
+      target_language:
+        enum: [es, fr, de, it, pt, ja, zh, ar, ru, ko]
+      text:
+        type: string

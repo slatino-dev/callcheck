@@ -1,0 +1,34 @@
+# Strict enum — only the listed values are valid.
+id: schema_enum_strict
+description: Model must pick exactly one of the allowed priority enum values.
+tags: [schema_complex, enum_arg, strict_enum]
+
+messages:
+  - role: user
+    content: "Create a high-priority task called 'Fix login bug'."
+
+tools:
+  - type: function
+    function:
+      name: create_task
+      description: Create a project task.
+      parameters:
+        type: object
+        properties:
+          title:
+            type: string
+          priority:
+            type: string
+            enum: [low, medium, high, critical]
+          assignee:
+            type: string
+        required: [title, priority]
+
+expect:
+  tool_calls:
+    count: 1
+    name: create_task
+    required_args: [title, priority]
+    arg_predicates:
+      priority:
+        enum: [low, medium, high, critical]

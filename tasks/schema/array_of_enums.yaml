@@ -1,0 +1,34 @@
+# Array of enum values — model must pick from a restricted set for each item.
+id: schema_array_of_enums
+description: Model passes an array of permission strings, each from a fixed enum.
+tags: [schema_complex, array_arg, enum_arg]
+
+messages:
+  - role: user
+    content: "Grant user U-500 permissions: read, write, and admin."
+
+tools:
+  - type: function
+    function:
+      name: set_permissions
+      description: Set a user's permission set.
+      parameters:
+        type: object
+        properties:
+          user_id:
+            type: string
+          permissions:
+            type: array
+            items:
+              type: string
+              enum: [read, write, admin, audit, billing]
+        required: [user_id, permissions]
+
+expect:
+  tool_calls:
+    count: 1
+    name: set_permissions
+    required_args: [user_id, permissions]
+    arg_predicates:
+      permissions:
+        type: array

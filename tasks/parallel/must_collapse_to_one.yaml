@@ -1,0 +1,27 @@
+# Single-call test that would fail if model emits spurious extra calls.
+# Verifies that the model doesn't hallucinate a parallel call for a singular request.
+id: parallel_must_collapse_to_one
+description: Model must emit exactly one call even though the tool supports parallel use.
+tags: [parallel, must_collapse_to_one, single_call]
+
+messages:
+  - role: user
+    content: "What is the weather in Paris?"
+
+tools:
+  - type: function
+    function:
+      name: get_weather
+      description: Get current weather for a city.
+      parameters:
+        type: object
+        properties:
+          location:
+            type: string
+        required: [location]
+
+expect:
+  tool_calls:
+    count: 1
+    name: get_weather
+    required_args: [location]

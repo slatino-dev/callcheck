@@ -1,0 +1,29 @@
+# Unicode in string arg — CJK city name.
+id: edge_unicode_cjk_location
+description: Model passes a CJK Unicode city name without escaping issues.
+tags: [edge_case, unicode, string_discipline]
+
+messages:
+  - role: user
+    content: "天気予報：東京の現在の天気を教えてください。"
+
+tools:
+  - type: function
+    function:
+      name: get_weather
+      description: Get current weather for a city.
+      parameters:
+        type: object
+        properties:
+          location:
+            type: string
+        required: [location]
+
+expect:
+  tool_calls:
+    count: 1
+    name: get_weather
+    required_args: [location]
+    arg_predicates:
+      location:
+        type: string
