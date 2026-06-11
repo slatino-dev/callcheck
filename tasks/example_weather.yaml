@@ -1,0 +1,45 @@
+# Example callcheck task: single-tool call with required arguments.
+# The model must call 'get_weather' with a 'location' string and an optional
+# 'units' enum.  Used to verify basic tool-call conformance.
+
+id: example_weather_basic
+description: >
+  Model should emit exactly one tool call to get_weather with a valid
+  location string.  No multi-call, no refusal.
+tags:
+  - single_tool
+  - required_arg
+  - smoke
+
+messages:
+  - role: user
+    content: "What's the weather in Dublin right now?"
+
+tools:
+  - type: function
+    function:
+      name: get_weather
+      description: Get current weather for a location.
+      parameters:
+        type: object
+        properties:
+          location:
+            type: string
+            description: City name or city, country code.
+          units:
+            type: string
+            enum: [celsius, fahrenheit]
+            default: celsius
+        required: [location]
+
+expect:
+  tool_calls:
+    count: 1
+    name: get_weather
+    required_args: [location]
+    arg_schema:
+      location:
+        type: string
+      units:
+        type: string
+        enum: [celsius, fahrenheit]
