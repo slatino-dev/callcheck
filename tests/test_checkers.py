@@ -160,6 +160,23 @@ class TestCheckNoCall:
         result = check_no_call(resp, task)
         assert result.score == 0.0
 
+    def test_passes_content_only_when_count_is_zero(self) -> None:
+        """A zero-call response must PASS when the task expects count=0."""
+        task = _make_task(count=0, required_args=[])
+        resp = _make_completion(content="Latency is the delay in data transmission.")
+        result = check_no_call(resp, task)
+        assert result.passed is True
+        assert result.failure_kind is None
+
+    def test_fails_when_call_present_but_count_is_zero(self) -> None:
+        """A tool call on a count=0 task is NOT caught here; check_call_count handles it."""
+        task = _make_task(count=0, required_args=[])
+        resp = _make_completion(tool_calls=[_make_call()])
+        # check_no_call sees calls present → passes (spurious-call detection
+        # is the job of check_call_count, not check_no_call)
+        result = check_no_call(resp, task)
+        assert result.passed is True
+
 
 # ---------------------------------------------------------------------------
 # check_call_count

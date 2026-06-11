@@ -320,3 +320,51 @@ class TestMixedSuiteReport:
         config = ReportConfig(format="rich", output_path=out, top_n_failures=5)
         render(results, config)
         assert out.exists()
+
+
+# ---------------------------------------------------------------------------
+# count=0 (nocall) task — success path must be exercised end-to-end
+# ---------------------------------------------------------------------------
+
+
+class TestNocallTaskPassesOnRefusal:
+    """A task that expects no tool call must PASS when the mockserver returns a
+    plain-text refusal (count=0 + refusal mode → correct behaviour)."""
+
+    def test_refusal_passes_count_zero_task(self, mockserver_url: str) -> None:
+        task = TaskSpec(
+            id="e2e_nocall_pass",
+            messages=[
+                {"role": "system", "content": "__mock__:refusal"},
+                {"role": "user", "content": "What does latency mean in networking?"},
+            ],
+            tools=[
+                {
+                    "type": "function",
+                    "function": {
+                        "name": "web_search",
+                        "description": "Search the web.",
+                        "parameters": {
+                            "type": "object",
+                            "properties": {"query": {"type": "string"}},
+                            "required": ["query"],
+                        },
+                    },
+                }
+            ],
+            expect=Expectation(tool_calls=ToolCallExpectation(count=0)),
+            tags=["nocall", "e2e"],
+        )
+        config = RunConfig(base_url=mockserver_url, api_key="none", model="mock-model", k=1)
+
+        async def _go():
+            return await async_run_suite([task], config)
+
+        results = asyncio.run(_go())
+        assert len(results) == 1
+        result = results[0]
+        assert result.passed is True, (
+            f"count=0 task should PASS on a refusal response; "
+            f"failure_kinds={result.failure_kinds}"
+        )
+        assert result.primary_failure is None
