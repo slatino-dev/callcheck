@@ -118,11 +118,25 @@ def _parse_arguments(call: dict[str, Any]) -> tuple[dict[str, Any] | None, str |
 # ---------------------------------------------------------------------------
 
 
-def check_no_call(response: dict[str, Any], _task: TaskSpec) -> CheckResult:
-    """Fail if the model produced zero tool calls."""
+def check_no_call(response: dict[str, Any], task: TaskSpec) -> CheckResult:
+    """Fail if the model produced zero tool calls when at least one was expected.
+
+    When ``task.expect.tool_calls.count == 0`` the expectation is *no* tool call,
+    so a content-only response passes this check.  Spurious calls on such tasks
+    are caught separately by :func:`check_call_count`.
+    """
+    expected_count = 1
+    if task.expect.tool_calls is not None:
+        expected_count = task.expect.tool_calls.count
+
     calls = _get_tool_calls(response)
     if calls:
         return CheckResult(name="no_call", passed=True)
+
+    # Zero calls is correct when count=0 is expected.
+    if expected_count == 0:
+        return CheckResult(name="no_call", passed=True)
+
     return CheckResult(
         name="no_call",
         passed=False,
@@ -144,14 +158,11 @@ def check_call_count(response: dict[str, Any], task: TaskSpec) -> CheckResult:
         return CheckResult(name="call_count", passed=True)
 
     if actual > expected_count:
-        kind = FailureKind.spurious_call
-        if expected_count > 1 and actual == 1:
-            kind = FailureKind.parallel_collapse
         return CheckResult(
             name="call_count",
             passed=False,
             detail=f"Expected {expected_count} tool call(s); got {actual}",
-            failure_kind=kind,
+            failure_kind=FailureKind.spurious_call,
         )
 
     # actual < expected_count
@@ -216,7 +227,13 @@ def check_json_parse(response: dict[str, Any], _task: TaskSpec) -> CheckResult:
 
 
 def check_truncation(response: dict[str, Any], _task: TaskSpec) -> CheckResult:
-    """Fail if arguments are valid JSON but suspiciously short (likely truncated)."""
+    """Fail if the arguments field is empty or None (likely truncated output).
+
+    This checker catches the case where ``arguments`` is an empty string or
+    ``None``.  The short-args heuristic (flagging suspiciously compact JSON
+    objects) is intentionally deferred to :func:`check_required_args` because
+    an empty ``{}`` is only suspicious when required keys are declared.
+    """
     call = _first_call(response)
     if call is None:
         return CheckResult(name="truncation", passed=True, detail="no call to check")

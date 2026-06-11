@@ -22,6 +22,7 @@ Usage::
 
 from __future__ import annotations
 
+import asyncio
 import os
 import time
 from typing import Any
@@ -193,10 +194,22 @@ class ModelClient:
 
 
 class AsyncModelClient:
-    """Async variant using :class:`httpx.AsyncClient`.
+    """Async variant using a shared :class:`httpx.AsyncClient` for connection reuse.
 
-    API mirrors :class:`ModelClient`.  Use with ``await client.acomplete(...)``
-    inside an asyncio event loop.
+    API mirrors :class:`ModelClient`.  The underlying HTTP client is created
+    lazily on the first call and closed when the instance is used as an async
+    context manager or when :meth:`aclose` is called explicitly.
+
+    Usage as a context manager (preferred for suites)::
+
+        async with AsyncModelClient(base_url=...) as client:
+            result = await client.acomplete(messages=..., tools=...)
+
+    Usage without a context manager (fire-and-forget)::
+
+        client = AsyncModelClient(base_url=...)
+        result = await client.acomplete(messages=..., tools=...)
+        await client.aclose()
     """
 
     def __init__(
@@ -210,12 +223,30 @@ class AsyncModelClient:
         self.api_key = api_key or _get_api_key()
         self.timeout = timeout
         self.max_retries = max_retries
+        self._http_client: httpx.AsyncClient | None = None
 
     def _headers(self) -> dict[str, str]:
         return {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
         }
+
+    def _get_client(self) -> httpx.AsyncClient:
+        if self._http_client is None:
+            self._http_client = httpx.AsyncClient(timeout=self.timeout)
+        return self._http_client
+
+    async def aclose(self) -> None:
+        """Close the underlying HTTP client and release connections."""
+        if self._http_client is not None:
+            await self._http_client.aclose()
+            self._http_client = None
+
+    async def __aenter__(self) -> AsyncModelClient:
+        return self
+
+    async def __aexit__(self, *_: object) -> None:
+        await self.aclose()
 
     async def acomplete(
         self,
@@ -227,8 +258,6 @@ class AsyncModelClient:
         **extra: Any,
     ) -> dict[str, Any]:
         """Async equivalent of :meth:`ModelClient.complete`."""
-        import asyncio
-
         body: dict[str, Any] = {
             "model": model,
             "messages": messages,
@@ -241,28 +270,28 @@ class AsyncModelClient:
 
         url = f"{self.base_url}/v1/chat/completions"
         delay = _RETRY_BASE_DELAY
+        http_client = self._get_client()
 
-        async with httpx.AsyncClient(timeout=self.timeout) as http_client:
-            for attempt in range(self.max_retries + 1):
-                try:
-                    resp = await http_client.post(
-                        url, json=body, headers=self._headers()
-                    )
-                except httpx.TransportError:
-                    if attempt < self.max_retries:
-                        await asyncio.sleep(delay)
-                        delay *= 2
-                        continue
-                    raise
-
-                if resp.status_code in _RETRY_STATUSES and attempt < self.max_retries:
-                    retry_after = resp.headers.get("Retry-After")
-                    wait = float(retry_after) if retry_after else delay
-                    await asyncio.sleep(wait)
+        for attempt in range(self.max_retries + 1):
+            try:
+                resp = await http_client.post(
+                    url, json=body, headers=self._headers()
+                )
+            except httpx.TransportError:
+                if attempt < self.max_retries:
+                    await asyncio.sleep(delay)
                     delay *= 2
                     continue
+                raise
 
-                resp.raise_for_status()
-                return _normalise_response(resp.json())
+            if resp.status_code in _RETRY_STATUSES and attempt < self.max_retries:
+                retry_after = resp.headers.get("Retry-After")
+                wait = float(retry_after) if retry_after else delay
+                await asyncio.sleep(wait)
+                delay *= 2
+                continue
+
+            resp.raise_for_status()
+            return _normalise_response(resp.json())
 
         raise RuntimeError("Exhausted retries without a successful response")

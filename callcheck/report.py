@@ -280,9 +280,20 @@ def _render_rich(
     results: list[RunResult],
     config: ReportConfig,
 ) -> None:
-    console = Console(file=sys.stdout if config.output_path is None else open(
-        config.output_path, "w", encoding="utf-8"
-    ))
+    if config.output_path is not None:
+        with config.output_path.open("w", encoding="utf-8") as fh:
+            console = Console(file=fh)
+            _render_rich_to(results, config, console)
+    else:
+        console = Console(file=sys.stdout)
+        _render_rich_to(results, config, console)
+
+
+def _render_rich_to(
+    results: list[RunResult],
+    config: ReportConfig,
+    console: Console,
+) -> None:
     if not results:
         console.print("[yellow]No results to render.[/yellow]")
         return

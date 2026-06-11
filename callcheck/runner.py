@@ -48,7 +48,7 @@ from callcheck.taxonomy import FailureKind, classify_results, primary_kind
 # Progress callback type
 # ---------------------------------------------------------------------------
 
-#: Signature: ``callback(task_id, result, done, total)``
+#: Signature: ``callback(result, done, total)``
 ProgressCallback = Callable[["RunResult", int, int], None]
 
 
@@ -528,61 +528,3 @@ def load_checkpoint_results(path: Path) -> list[dict[str, Any]]:
     return rows
 
 
-# ---------------------------------------------------------------------------
-# spark_matrix placeholder
-# ---------------------------------------------------------------------------
-
-
-def spark_matrix_guide() -> str:
-    """Return a human-readable description of how to run the full benchmark matrix.
-
-    The actual matrix orchestration runs **on the bench host** because it
-    requires restarting vLLM between models.  This function documents the
-    intended loop so the bench script can import and print it.
-
-    Bench-host restart loop (pseudocode)
-    ------------------------------------
-    For each (model, parser_backend) combination:
-
-    1.  SSH to the bench host and restart vLLM with the new model::
-
-            ssh bench-host \\
-              "systemctl stop vllm && \\
-               export MODEL_ID=<model> && \\
-               systemctl start vllm && \\
-               sleep 30 && \\
-               curl http://localhost:8000/health"
-
-    2.  Run callcheck against the live endpoint::
-
-            callcheck run \\
-              --model <model> \\
-              --base-url http://bench-host:8000 \\
-              --parser-backend <parser_backend> \\
-              --tasks tasks/ \\
-              --k 3 \\
-              --checkpoint results/<model>_<parser>.jsonl \\
-              --output results/<model>_<parser>_report.json
-
-    3.  After all cells complete, aggregate with::
-
-            callcheck report --matrix results/*.jsonl
-
-    Matrix dimensions (illustrative — update when the bench roster changes)
-    -----------------------------------------------------------------------
-    models:
-      - qwen2.5-7b-instruct
-      - qwen2.5-72b-instruct
-      - hermes-3-llama-3.1-8b
-      - mistral-nemo-12b
-      - llama-3.1-8b-instruct
-
-    parser_backends:
-      - hermes-2       (vLLM --tool-call-parser hermes)
-      - mistral        (vLLM --tool-call-parser mistral)
-      - llama3_json    (vLLM --tool-call-parser llama3_json)
-
-    DO NOT fabricate model results.  The bench host runs real inference;
-    this callcheck repo scores the outputs.
-    """
-    return spark_matrix_guide.__doc__ or ""

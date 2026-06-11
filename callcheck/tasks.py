@@ -10,7 +10,7 @@ Task YAML schema::
     description: str (optional)
     messages: [{role: str, content: str}]
     tools: [OpenAI tool definition dict]
-    mode: "native_toolcall" | "json_guided"   (default: native_toolcall)
+    mode: "native_toolcall"   (default and only supported value; see LIMITATIONS)
     expect:
       tool_calls:
         count: int               # exact number expected (default: 1)
@@ -34,10 +34,14 @@ from pydantic import BaseModel, Field, model_validator
 
 
 class CallMode(StrEnum):
-    """How the model is instructed to produce tool calls."""
+    """How the model is instructed to produce tool calls.
+
+    Only ``native_toolcall`` is implemented.  ``json_guided`` mode (send
+    ``response_format`` / ``json_schema`` and score ``message.content`` as
+    JSON) is planned but not yet supported — see LIMITATIONS in the README.
+    """
 
     native_toolcall = "native_toolcall"
-    json_guided = "json_guided"
 
 
 class ArgPredicate(BaseModel):

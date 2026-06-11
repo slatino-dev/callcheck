@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "callcheck"
 version = "0.1.0"
-description = "Tool-calling and structured-output conformance testing for vLLM-served models."
+description = "Tool-calling conformance benchmark for OpenAI-compatible endpoints (vLLM, etc.)."
 readme = "README.md"
 license = { text = "MIT" }
 authors = [{ name = "Sam Latino", email = "Latinosammy2@gmail.com" }]
