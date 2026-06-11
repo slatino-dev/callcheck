@@ -3,12 +3,15 @@
 Exposes POST /v1/chat/completions.  The response behaviour is controlled by
 a special system-message prefix in the request:
 
-  "__mock__:ok"        -> well-formed single tool call (first tool in request)
-  "__mock__:malformed" -> tool call with broken/truncated JSON arguments
-  "__mock__:extra"     -> two tool calls when only one was expected
-  "__mock__:refusal"   -> content reply, no tool_calls (simulates model refusal)
-  "__mock__:empty_args"-> tool call present but arguments is empty string ""
-  (default / anything else) -> well-formed single tool call
+  "__mock__:ok"                -> well-formed single tool call (first tool in request)
+  "__mock__:malformed"         -> tool call with broken/truncated JSON arguments
+  "__mock__:extra"             -> two tool calls when only one was expected
+  "__mock__:refusal"           -> content reply, no tool_calls (simulates model refusal)
+  "__mock__:empty_args"        -> tool call present but arguments is empty string ""
+  "__mock__:wrong_tool"        -> calls __hallucinated_tool__ instead of the requested one
+  "__mock__:hallucinated_param"-> well-formed call + extra unknown parameter
+  "__mock__:missing_required"  -> tool call with empty arguments object {}
+  (default / anything else)    -> well-formed single tool call
 
 Usage:
   python -m mockserver.app          # runs on 127.0.0.1:9876
@@ -105,6 +108,24 @@ async def chat_completions(request: Request) -> JSONResponse:
 
     if mode == "empty_args":
         tc = _tool_call(tool_name, "")
+        return JSONResponse(_completion(tool_calls=[tc]))
+
+    if mode == "wrong_tool":
+        # Calls a tool that was not requested
+        tc = _tool_call("__hallucinated_tool__", json.dumps({"location": "Dublin"}))
+        return JSONResponse(_completion(tool_calls=[tc]))
+
+    if mode == "hallucinated_param":
+        # Well-formed call but with an extra parameter not in any schema
+        tc = _tool_call(
+            tool_name,
+            json.dumps({"location": "Dublin", "units": "celsius", "__extra__": "bad"}),
+        )
+        return JSONResponse(_completion(tool_calls=[tc]))
+
+    if mode == "missing_required":
+        # Omits all arguments (empty object)
+        tc = _tool_call(tool_name, json.dumps({}))
         return JSONResponse(_completion(tool_calls=[tc]))
 
     # Default / "ok": well-formed single tool call
